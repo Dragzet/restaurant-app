@@ -4,10 +4,11 @@ import (
 	"chipsiBackend/domain"
 	"chipsiBackend/pkg/httpErrors"
 	"encoding/json"
-	"github.com/go-chi/chi/v5"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type CategoryController struct {
@@ -73,9 +74,14 @@ func (cc *CategoryController) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	categories, err := cc.CategoryUsecase.GetAll(r.Context(), include == "true")
 
-	if err != nil || len(categories) == 0 {
+	if err != nil {
 		http.Error(w, `{"error": "not found"}`, http.StatusNotFound)
 		return
+	}
+
+	// Возвращаем пустой массив если категорий нет, вместо ошибки
+	if len(categories) == 0 {
+		categories = []*domain.Category{}
 	}
 
 	if err := json.NewEncoder(w).Encode(categories); err != nil {

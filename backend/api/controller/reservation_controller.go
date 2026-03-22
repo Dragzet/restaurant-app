@@ -5,9 +5,10 @@ import (
 	"chipsiBackend/domain"
 	"chipsiBackend/pkg/httpErrors"
 	"encoding/json"
-	"github.com/go-chi/chi/v5"
 	"net/http"
 	"strconv"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type ReservationController struct {
@@ -15,14 +16,15 @@ type ReservationController struct {
 }
 
 func (c *ReservationController) CreateReservation(w http.ResponseWriter, r *http.Request) {
-	var userID uint
+	var userID *uint
 	if userIDStr, ok := r.Context().Value(middleware.UserIDKey).(string); ok {
 		id, err := strconv.ParseInt(userIDStr, 10, 64)
 		if err != nil {
 			httpErrors.JSONError(w, "can't parse userId", http.StatusInternalServerError)
 			return
 		}
-		userID = uint(id)
+		uid := uint(id)
+		userID = &uid
 	}
 
 	var reservationRequest domain.ReservationRequest
@@ -31,7 +33,7 @@ func (c *ReservationController) CreateReservation(w http.ResponseWriter, r *http
 		return
 	}
 
-	if userID != 0 {
+	if userID != nil {
 		reservationRequest.UserID = userID
 	}
 

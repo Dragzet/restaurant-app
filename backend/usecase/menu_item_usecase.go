@@ -3,21 +3,18 @@ package usecase
 import (
 	"chipsiBackend/domain"
 	"context"
-	"github.com/google/uuid"
 	"mime/multipart"
 	"time"
 )
 
 type menuItemUsecase struct {
-	s3Usecase          S3Usecase
 	categoryUsecase    domain.CategoryUsecase
 	menuItemRepository domain.MenuItemRepository
 	contextTimeout     time.Duration
 }
 
-func NewMenuItemUsecase(s3Usecase S3Usecase, categoryUsecase domain.CategoryUsecase, menuItemRepository domain.MenuItemRepository, timeout time.Duration) domain.MenuItemUsecase {
+func NewMenuItemUsecase(categoryUsecase domain.CategoryUsecase, menuItemRepository domain.MenuItemRepository, timeout time.Duration) domain.MenuItemUsecase {
 	return &menuItemUsecase{
-		s3Usecase:          s3Usecase,
 		categoryUsecase:    categoryUsecase,
 		menuItemRepository: menuItemRepository,
 		contextTimeout:     timeout,
@@ -28,14 +25,11 @@ func (mu menuItemUsecase) Create(ctx context.Context, menuItem *domain.MenuItem,
 	ctx, cancel := context.WithTimeout(ctx, mu.contextTimeout)
 	defer cancel()
 
-	contentType := handler.Header.Get("Content-Type")
-	size := handler.Size
-	imageUrl, err := mu.s3Usecase.UploadImage(ctx, image, uuid.NewString(), contentType, size)
-	if err != nil {
-		return nil, err
+	// Без загрузки на S3, просто сохраняем имя файла как URL
+	if handler != nil {
+		menuItem.ImageURL = "/uploads/" + handler.Filename
 	}
-
-	menuItem.ImageURL = imageUrl
+	
 	newMenuItem, err := mu.menuItemRepository.Create(ctx, menuItem)
 	if err != nil {
 		return nil, err

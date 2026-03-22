@@ -1,90 +1,62 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import styles from "./AddressFormPopup.module.css";
 import TextField from "@mui/material/TextField";
-import CircularProgress from "@mui/material/CircularProgress";
 import Autocomplete from "@mui/material/Autocomplete";
-import axios from "axios";
 import {Address} from "../../store/addressSlice";
 
-interface Suggestion {
-    title: string;
-    formatted_address: string;
-}
+// Популярные адреса в Москве для подсказок
+const POPULAR_ADDRESSES = [
+    "Москва, ул. Пушкина, д. 1",
+    "Москва, ул. Ленина, д. 1",
+    "Москва, Красная площадь, д. 1",
+    "Москва, ул. Арбат, д. 1",
+    "Москва, ул. Тверская, д. 1",
+    "Москва, ул. Невский проспект, д. 1",
+    "Москва, ул. Горкого, д. 1",
+    "Москва, ул. Красного октября, д. 1",
+    "Санкт-Петербург, Невский проспект, д. 1",
+    "Санкт-Петербург, ул. Садовая, д. 1",
+];
 
 interface Props {
     open: boolean;
     onClose: () => void;
-    onSubmit: (address: Address) => void;  // Функция теперь принимает объект Address
+    onSubmit: (address: Address) => void;
 }
 
 const AddressFormPopup: React.FC<Props> = ({ open, onClose, onSubmit }) => {
-    const [query, setQuery] = useState("");
-    const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
-    const [loading, setLoading] = useState(false);
-
+    const [address, setAddress] = useState("");
     const [entrance, setEntrance] = useState("");
     const [doorCode, setDoorCode] = useState("");
     const [floor, setFloor] = useState("");
     const [flat, setFlat] = useState("");
     const [comment, setComment] = useState("");
 
-    const fetchSuggestions = async (input: string) => {
-        if (input.length < 3) {
-            setSuggestions([]);
+    // Фильтруем подсказки на основе ввода пользователя
+    const filteredSuggestions = useMemo(() => {
+        if (!address || address.length < 2) return [];
+        return POPULAR_ADDRESSES.filter(addr =>
+            addr.toLowerCase().includes(address.toLowerCase())
+        );
+    }, [address]);
+
+    const handleSubmit = () => {
+        if (!address.trim()) {
+            alert("Пожалуйста, укажите адрес");
             return;
         }
 
-        setLoading(true);
-        try {
-            const response = await axios.get(process.env.REACT_APP_SUGGEST_URL ?? "", {
-                params: {
-                    apikey: process.env.REACT_APP_SUGGEST_API_KEY,
-                    text: input,
-                    lang: "ru_RU",
-                    results: 5,
-                    print_address: 1
-                },
-            });
-
-            if (response.data && response.data.results) {
-                const formatted = response.data.results.map((r: any) => ({
-                    title: r.title.text,
-                    formatted_address: r.address.formatted_address,
-                }));
-                setSuggestions(formatted);
-            } else {
-                setSuggestions([]);
-            }
-        } catch (e) {
-            console.error("Ошибка при автодополнении", e);
-            setSuggestions([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value;
-        setQuery(val);
-        fetchSuggestions(val);
-    };
-
-    const handleSelect = (_: any, value: Suggestion | null) => {
-        if (value) setQuery(value.formatted_address);
-    };
-
-    const handleSubmit = () => {
         const fullAddress: Address = {
-            address: query,
-            floor: parseInt(floor, 10),
-            entrance,
-            apartmentNumber: parseInt(flat, 10),
-            intercomCode: doorCode,
-            notes: comment,
-            lat: 0, // координаты нужно получить через геокодирование
-            lng: 0, // координаты нужно получить через геокодирование
+            address: address,
+            floor: floor ? parseInt(floor, 10) : 0,
+            entrance: entrance || "",
+            apartmentNumber: flat ? parseInt(flat, 10) : 0,
+            intercomCode: doorCode || "",
+            notes: comment || "",
+            lat: 55.7558,
+            lng: 37.6173,
         };
-        onSubmit(fullAddress); // Передаем объект Address
+        onSubmit(fullAddress);
         onClose();
     };
 
@@ -96,46 +68,69 @@ const AddressFormPopup: React.FC<Props> = ({ open, onClose, onSubmit }) => {
                 <h2 className={styles.title}>Укажите ваш адрес</h2>
                 <div className={styles.formGrid}>
                     <Autocomplete
-                        disablePortal
-                        options={suggestions}
-                        getOptionLabel={(opt) => opt.formatted_address}
-                        onChange={handleSelect}
-                        loading={loading}
+                        freeSolo
+                        options={filteredSuggestions}
+                        value={address}
+                        onChange={(_, value) => setAddress(value || "")}
+                        inputValue={address}
+                        onInputChange={(_, value) => setAddress(value)}
                         renderInput={(params) => (
                             <TextField
                                 {...params}
                                 label="Город, улица и дом"
-                                value={query}
-                                onChange={handleChange}
                                 className={styles.inputFull}
                                 size="small"
-                                InputProps={{
-                                    ...params.InputProps,
-                                    endAdornment: (
-                                        <>
-                                            {loading && <CircularProgress color="inherit" size={18} />}
-                                            {params.InputProps.endAdornment}
-                                        </>
-                                    ),
-                                }}
+                                placeholder="Начните вводить адрес..."
                             />
                         )}
                     />
-                    <TextField label="Подъезд" value={entrance} onChange={(e) => setEntrance(e.target.value)} className={styles.inputHalf} size="small" />
-                    <TextField label="Код двери" value={doorCode} onChange={(e) => setDoorCode(e.target.value)} className={styles.inputHalf} size="small" />
-                    <TextField label="Этаж" value={floor} onChange={(e) => setFloor(e.target.value)} className={styles.inputHalf} size="small" />
-                    <TextField label="Квартира" value={flat} onChange={(e) => setFlat(e.target.value)} className={styles.inputHalf} size="small" />
-                    <TextField label="Комментарий к адресу" value={comment} onChange={(e) => setComment(e.target.value)} className={styles.inputFull} size="small" />
+                    <TextField 
+                        label="Подъезд" 
+                        value={entrance} 
+                        onChange={(e) => setEntrance(e.target.value)} 
+                        className={styles.inputHalf} 
+                        size="small" 
+                    />
+                    <TextField 
+                        label="Код двери" 
+                        value={doorCode} 
+                        onChange={(e) => setDoorCode(e.target.value)} 
+                        className={styles.inputHalf} 
+                        size="small" 
+                    />
+                    <TextField 
+                        label="Этаж" 
+                        value={floor} 
+                        onChange={(e) => setFloor(e.target.value)} 
+                        className={styles.inputHalf} 
+                        size="small" 
+                        type="number"
+                    />
+                    <TextField 
+                        label="Квартира" 
+                        value={flat} 
+                        onChange={(e) => setFlat(e.target.value)} 
+                        className={styles.inputHalf} 
+                        size="small"
+                        type="number"
+                    />
+                    <TextField 
+                        label="Комментарий к адресу" 
+                        value={comment} 
+                        onChange={(e) => setComment(e.target.value)} 
+                        className={styles.inputFull} 
+                        size="small" 
+                    />
                 </div>
                 <div className={styles.actions}>
                     <button onClick={onClose} className={styles.cancel}>Отмена</button>
                     <button
                         onClick={handleSubmit}
-                        disabled={!query.trim()}
+                        disabled={!address.trim()}
                         className={styles.submit}
-                        style={{ opacity: !query.trim() ? 0.6 : 1 }}
+                        style={{ opacity: !address.trim() ? 0.6 : 1 }}
                     >
-                        Заказать сюда
+                        Сохранить адрес
                     </button>
                 </div>
             </div>

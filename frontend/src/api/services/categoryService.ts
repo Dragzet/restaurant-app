@@ -12,7 +12,7 @@ export default class CategoryService {
     }
 
     static async getAll(includeMenuItems: boolean): Promise<AxiosResponse<Category[]>> {
-        return api.get<Category[]>(`api/v1/categories?includeMenuItems=${includeMenuItems}`)
+        return api.get<Category[]>(`/api/v1/categories?includeMenuItems=${includeMenuItems}`)
     }
 
     static async delete(id: number): Promise<AxiosResponse<void>> {

@@ -7,12 +7,16 @@ import (
 
 type Reservation struct {
 	ID        uint              `gorm:"primaryKey" json:"id"`
-	UserID    uint              `json:"userId"`
+	UserID    *uint             `json:"userId"` // nullable для гостевых бронирований
 	Date      time.Time         `gorm:"type:date;not null" json:"date"`
 	Time      time.Time         `gorm:"type:time;not null" json:"time"`
 	Guests    int               `gorm:"not null" json:"guests"`
 	Status    ReservationStatus `gorm:"default:'pending'" json:"status"`
 	CreatedAt time.Time         `gorm:"autoCreateTime" json:"createdAt"`
+	// Контактная информация для гостевых бронирований
+	GuestName  string `json:"guestName,omitempty"`
+	GuestEmail string `json:"guestEmail,omitempty"`
+	GuestPhone string `json:"guestPhone,omitempty"`
 }
 
 type UpdateStatusRequest struct {
@@ -21,10 +25,14 @@ type UpdateStatusRequest struct {
 }
 
 type ReservationRequest struct {
-	UserID uint
+	UserID *uint  `json:"userId"` // nullable для гостевых бронирований
 	Date   string `json:"date"`
 	Time   string `json:"time"`
 	Guests int    `json:"guests"`
+	// Контактная информация для гостевых бронирований
+	Name   string `json:"name,omitempty"`
+	Email  string `json:"email,omitempty"`
+	Phone  string `json:"phone,omitempty"`
 }
 
 type ReservationRepository interface {

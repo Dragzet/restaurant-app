@@ -15,16 +15,9 @@ database:
   dbname: chipsi
   sslMode: false
 
-s3:
-  endpoint: s3.cloud.ru
-  bucket: chipsi-restaurant
-  region: ru-central-1
-  access_key: ${S3_ACCESS_KEY}
-  secret_key: ${S3_SECRET_KEY}
-
 smtp:
-  from: roflandown@yandex.ru
+  from: inftop@yandex.ru
   host: smtp.yandex.ru
   port: 465
-  username: roflandown@yandex.ru
+  username: inftop@yandex.ru
   password: ${SMTP_PASSWORD}

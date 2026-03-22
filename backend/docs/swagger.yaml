@@ -1,0 +1,476 @@
+openapi: 3.0.0
+info:
+  title: Restaurant App API
+  version: 1.0.0
+  description: API для приложения ресторана с поддержкой меню, бронирований, заказов и управления пользователями
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+  - url: https://api.restaurant.com/api/v1
+    description: Production server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+      required:
+        - id
+        - name
+
+    MenuItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          format: double
+        categoryId:
+          type: integer
+        imageUrl:
+          type: string
+      required:
+        - id
+        - name
+        - price
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        phone:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        bonuses:
+          type: integer
+        isAdmin:
+          type: boolean
+
+    Reservation:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+          nullable: true
+        date:
+          type: string
+          format: date
+        time:
+          type: string
+        guests:
+          type: integer
+        status:
+          type: string
+          enum: [pending, confirmed, canceled, rejected]
+        createdAt:
+          type: string
+          format: date-time
+        guestName:
+          type: string
+          nullable: true
+        guestEmail:
+          type: string
+          nullable: true
+        guestPhone:
+          type: string
+          nullable: true
+
+    ReservationRequest:
+      type: object
+      properties:
+        userId:
+          type: integer
+          nullable: true
+        date:
+          type: string
+          format: date
+          description: Дата в формате YYYY-MM-DD
+        time:
+          type: string
+          description: Время в формате HH:mm
+        guests:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+          description: Имя гостя (для незарегистрированных)
+        email:
+          type: string
+          description: Email гостя (для незарегистрированных)
+        phone:
+          type: string
+          description: Телефон гостя (для незарегистрированных)
+      required:
+        - date
+        - time
+        - guests
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    SignupRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+      required:
+        - email
+        - password
+        - firstName
+        - lastName
+        - phone
+
+    TokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Проверка здоровья сервера
+      responses:
+        '200':
+          description: Сервер работает
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  service:
+                    type: string
+                  timestamp:
+                    type: string
+
+  /auth/signup:
+    post:
+      tags:
+        - Authentication
+      summary: Регистрация нового пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '200':
+          description: Успешная регистрация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '409':
+          description: Email уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Вход пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Успешный вход
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Неверные учетные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /categories:
+    get:
+      tags:
+        - Categories
+      summary: Получить все категории меню
+      parameters:
+        - name: includeMenuItems
+          in: query
+          schema:
+            type: boolean
+          description: Включить товары в категории
+      responses:
+        '200':
+          description: Список категорий
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+        '404':
+          description: Категории не найдены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /menuItems:
+    get:
+      tags:
+        - Menu Items
+      summary: Получить товары меню по категории
+      parameters:
+        - name: categoryId
+          in: query
+          schema:
+            type: integer
+          description: ID категории (опционально)
+      responses:
+        '200':
+          description: Список товаров меню
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MenuItem'
+        '404':
+          description: Категория не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Menu Items
+      summary: Создать новый товар меню (только админ)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                metadata:
+                  type: string
+                  description: JSON с данными товара
+                file:
+                  type: string
+                  format: binary
+              required:
+                - metadata
+                - file
+      responses:
+        '200':
+          description: Товар создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MenuItem'
+        '403':
+          description: Доступ запрещен (требуется быть админом)
+
+  /reservations:
+    post:
+      tags:
+        - Reservations
+      summary: Создать бронирование (для гостей и авторизованных пользователей)
+      description: |
+        Может использоваться без авторизации для гостей.
+        Для гостей обязательны поля: name, email, phone
+        Для авторизованных пользователей будет использоваться userId из токена
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservationRequest'
+      responses:
+        '200':
+          description: Бронирование создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+        '400':
+          description: Ошибка в запросе
+
+  /reservations/me:
+    get:
+      tags:
+        - Reservations
+      summary: Получить бронирования текущего пользователя
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Список бронирований пользователя
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reservation'
+        '401':
+          description: Требуется авторизация
+
+  /reservations/{id}/status:
+    patch:
+      tags:
+        - Reservations
+      summary: Обновить статус бронирования (только админ)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [confirmed, canceled, rejected]
+                comment:
+                  type: string
+              required:
+                - status
+      responses:
+        '200':
+          description: Статус обновлен
+        '403':
+          description: Доступ запрещен (требуется быть админом)
+
+  /users/me:
+    get:
+      tags:
+        - Users
+      summary: Получить профиль текущего пользователя
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Профиль пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Требуется авторизация
+
+    patch:
+      tags:
+        - Users
+      summary: Обновить профиль текущего пользователя
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+      responses:
+        '200':
+          description: Профиль обновлен
+        '401':
+          description: Требуется авторизация
+
+tags:
+  - name: Health
+    description: Проверка здоровья сервера
+  - name: Authentication
+    description: Аутентификация и авторизация
+  - name: Categories
+    description: Управление категориями меню
+  - name: Menu Items
+    description: Управление товарами меню
+  - name: Reservations
+    description: Управление бронированиями столиков
+  - name: Users
+    description: Управление профилями пользователей
+

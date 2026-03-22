@@ -5,10 +5,11 @@ import (
 	"chipsiBackend/bootstrap"
 	"chipsiBackend/setup"
 	"encoding/json"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"net/http"
 	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func Setup(app bootstrap.Application) chi.Router {
@@ -21,6 +22,71 @@ func Setup(app bootstrap.Application) chi.Router {
 	r.Use(custommiddleware.SetJSONContentType)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+
+	// Маршрут для доступа к загруженным файлам
+	fs := http.FileServer(http.Dir("./uploads"))
+	r.Handle("/uploads/*", http.StripPrefix("/uploads/", fs))
+
+	// Маршрут для Swagger JSON
+	r.HandleFunc("/docs/swagger.json", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		http.ServeFile(w, r, "./docs/swagger.json")
+	})
+
+	// Маршрут для Swagger UI
+	r.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		swaggerHTML := `
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Restaurant API - Swagger UI</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui.css">
+    <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/favicon-16x16.png" sizes="16x16" />
+    <style>
+      html {
+        box-sizing: border-box;
+        overflow: -moz-scrollbars-vertical;
+        overflow-y: scroll;
+      }
+      *, *:before, *:after {
+        box-sizing: inherit;
+      }
+      body {
+        margin:0;
+        padding:0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui-bundle.js"></script>
+    <script>
+      window.onload = function() {
+        SwaggerUIBundle({
+          url: "http://localhost:8080/docs/swagger.json",
+          dom_id: '#swagger-ui',
+          deepLinking: true,
+          presets: [
+            SwaggerUIBundle.presets.apis,
+            SwaggerUIBundle.SwaggerUIStandalonePreset
+          ],
+          plugins: [
+            SwaggerUIBundle.plugins.DownloadUrl
+          ],
+          layout: "BaseLayout"
+        });
+      };
+    </script>
+  </body>
+</html>
+		`
+		w.Write([]byte(swaggerHTML))
+	})
 
 	apiRouter := func(r chi.Router) {
 		r.Get("/health", healthCheck)
@@ -37,13 +103,15 @@ func Setup(app bootstrap.Application) chi.Router {
 		publicMenuItemRouter := NewMenuItemRouter(graph.UCs.MenuItem, adminMiddleware)
 		publicReservationRouter := NewReservationRouter(graph.UCs.Reservation, adminMiddleware)
 
-		// Монтируем публичные роуты отдельно, до применения JwtAuth
-		// Для категорий и меню это те же роутеры, но доступ к GET-методам
-		// уже реализован без adminHandler внутри самих роутеров
-		r.Mount("/categories", publicCategoryRouter)
-		r.Mount("/menuItems", publicMenuItemRouter)
-		// Для бронирований CreateReservation (POST /reservations) станет доступен без токена
-		r.Mount("/reservations", publicReservationRouter)
+		// Применяем OptionalJwtAuth для публичных маршрутов
+		// Это позволит установить UserIDKey если есть валидный токен
+		r.Group(func(r chi.Router) {
+			r.Use(custommiddleware.OptionalJwtAuth(app.Cfg.App.JwtSecretKey))
+			
+			r.Mount("/categories", publicCategoryRouter)
+			r.Mount("/menuItems", publicMenuItemRouter)
+			r.Mount("/reservations", publicReservationRouter)
+		})
 
 		// Требуют токен
 		r.Group(func(r chi.Router) {
@@ -53,12 +121,9 @@ func Setup(app bootstrap.Application) chi.Router {
 			r.Mount("/bonuses", NewBonusRouter(graph.UCs.Bonus))
 			// Для защищённого доступа к категориям, меню и бронированиям (например, /me и админские операции)
 			// можно повторно смонтировать те же роутеры внутри группы, чтобы сохранить поведение для авторизованных
-			r.Mount("/categories", NewCategoryRouter(graph.UCs.Category, adminMiddleware))
-			r.Mount("/menuItems", NewMenuItemRouter(graph.UCs.MenuItem, adminMiddleware))
 			r.Mount("/giftCertificates", NewGiftCertificateRouter(graph.UCs.GiftCertificate))
 			r.Mount("/users", NewUserRouter(graph.UCs.User, app.Log, adminMiddleware))
 			r.Mount("/orders", NewOrderRouter(graph.UCs.Order))
-			r.Mount("/reservations", NewReservationRouter(graph.UCs.Reservation, adminMiddleware))
 			r.Mount("/events", NewEventRouter(graph.UCs.Event, adminMiddleware, app.Log))
 
 		})

@@ -157,14 +157,15 @@ const CheckoutPage: React.FC = () => {
                     <div className={styles.selectedAddressContainer}>
                         {selectedAddress ? (
                             <div className={styles.selectedAddress}>
-                                <p>{selectedAddress.address}</p>
-                                <p>Подъезд: {selectedAddress.entrance}</p>
-                                <p>Этаж: {selectedAddress.floor} </p>
-                                <p>Квартира: {selectedAddress.floor}</p>
-                                <p>Комментарий: {selectedAddress.notes} </p>
+                                <p><strong>Адрес:</strong> {selectedAddress.address}</p>
+                                {selectedAddress.entrance && <p><strong>Подъезд:</strong> {selectedAddress.entrance}</p>}
+                                {selectedAddress.floor ? <p><strong>Этаж:</strong> {selectedAddress.floor}</p> : null}
+                                {selectedAddress.apartmentNumber ? <p><strong>Квартира:</strong> {selectedAddress.apartmentNumber}</p> : null}
+                                {selectedAddress.intercomCode && <p><strong>Код домофона:</strong> {selectedAddress.intercomCode}</p>}
+                                {selectedAddress.notes && <p><strong>Комментарий:</strong> {selectedAddress.notes}</p>}
                                 <button
                                     className={styles.changeAddressBtn}
-                                    onClick={() => setIsOpen(true)} // Открытие модального окна для выбора нового адреса
+                                    onClick={() => setIsOpen(true)}
                                 >
                                     Изменить
                                 </button>

@@ -52,7 +52,7 @@ const Header: React.FC = () => {
                     <GiftIcon className={styles.icon}/>
                     <p>Сертификаты</p>
                 </div>
-                <div className={styles.profile} onClick={() => navigate("/booking")}>
+                <div className={styles.profile} onClick={() => navigate("/user-booking")}>
                     <BookingIcon className={styles.icon}/>
                     <p>Букинг</p>
                 </div>

@@ -16,6 +16,9 @@ import AdminBookingPage from "../pages/admin/bookingPage/AdminBookingPage";
 import AdminHomePage from "../pages/admin/homePage/AdminHomePage";
 import ForgotPassword from "../pages/forgotPassword/ForgotPassword";
 import ResetPassword from "../pages/resetPassword/ResetPassword";
+import GuestHome from "../pages/public/GuestHome";
+import PublicMenu from "../pages/public/PublicMenu";
+import PublicBooking from "../pages/public/PublicBooking";
 
 interface PrivateRouteProps {
     children: JSX.Element;
@@ -46,16 +49,24 @@ const AdminRoute: React.FC<AdminRouteProps> = ({children}) => {
 
 
 const AppRouter = () => {
+    const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+
     return (
         <Routes>
             <Route
                 path="/"
                 element={
-                    <PrivateRoute>
-                        <Main/>
-                    </PrivateRoute>
+                    isAuthenticated ? (
+                        <PrivateRoute>
+                            <Main/>
+                        </PrivateRoute>
+                    ) : (
+                        <GuestHome/>
+                    )
                 }
             />
+            <Route path="/menu" element={<PublicMenu/>}/>
+            <Route path="/booking" element={<PublicBooking/>}/>
             <Route
                 path="/profile"
                 element={
@@ -89,7 +100,7 @@ const AppRouter = () => {
                 }
             />
             <Route
-                path="/booking"
+                path="/user-booking"
                 element={
                     <PrivateRoute>
                         <BookingPage/>
@@ -124,7 +135,7 @@ const AppRouter = () => {
             <Route path="/signup" element={<Signup/>}/>
             <Route path="/forgot-password" element={<ForgotPassword/>}/>
             <Route path="/reset-password" element={<ResetPassword/>}/>
-            <Route path="*" element={<Navigate to={"/login"}/>}/>
+            <Route path="*" element={<Navigate to={"/"}/>}/>
         </Routes>
     );
 };

@@ -41,11 +41,14 @@ func (r *reservationUsecase) Create(ctx context.Context, request *domain.Reserva
 	}
 
 	reservation := &domain.Reservation{
-		UserID: request.UserID,
-		Date:   date,
-		Time:   timeParsed,
-		Guests: request.Guests,
-		Status: domain.ReservationPending,
+		UserID:     request.UserID, // может быть nil для гостей
+		Date:       date,
+		Time:       timeParsed,
+		Guests:     request.Guests,
+		Status:     domain.ReservationPending,
+		GuestName:  request.Name,
+		GuestEmail: request.Email,
+		GuestPhone: request.Phone,
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, r.contextTimeout)
@@ -85,7 +88,13 @@ func (r *reservationUsecase) UpdateStatus(ctx context.Context, id int64, fields 
 				r.log.Error("ошибка при получении резервации", "error", err)
 				return
 			}
-			user, err := r.userRepository.GetByID(ctxTimeout, int64(reservation.UserID))
+
+			// Пропускаем отправку писем если это гостевое бронирование (UserID == nil)
+			if reservation.UserID == nil {
+				return
+			}
+
+			user, err := r.userRepository.GetByID(ctxTimeout, int64(*reservation.UserID))
 			if err != nil {
 				r.log.Error("ошибка при получении пользователя", "error", err)
 				return

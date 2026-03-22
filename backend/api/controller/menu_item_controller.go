@@ -4,10 +4,11 @@ import (
 	"chipsiBackend/domain"
 	"chipsiBackend/pkg/httpErrors"
 	"encoding/json"
-	"github.com/go-chi/chi/v5"
 	"mime/multipart"
 	"net/http"
 	"strconv"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type MenuItemController struct {
@@ -92,7 +93,13 @@ func (mc *MenuItemController) GetAll(w http.ResponseWriter, r *http.Request) {
 	categoryId := r.URL.Query().Get("categoryId")
 
 	if categoryId == "" {
-		httpErrors.JSONError(w, "query-param categoryId must be not null", http.StatusBadRequest)
+		// Если categoryId не передан, возвращаем пустой список вместо ошибки
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode([]*domain.MenuItem{}); err != nil {
+			httpErrors.JSONError(w, "can't encode menuItems to json", http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 

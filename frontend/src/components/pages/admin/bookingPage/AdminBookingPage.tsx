@@ -75,8 +75,8 @@ const AdminBookingPage: React.FC = () => {
             setEvents(sortedEvents);
 
             const userIds = Array.from(new Set([
-                ...res.data.map((r) => r.userId),
-                ...ev.data.map((e) => e.userId)
+                ...res.data.filter(r => r.userId).map((r) => r.userId!),
+                ...ev.data.filter(e => e.userId).map((e) => e.userId!)
             ]));
 
             const usersMap: { [key: number]: User } = {};
@@ -169,8 +169,16 @@ const AdminBookingPage: React.FC = () => {
                             <TableCell>{dayjs(r.date).format('DD.MM.YYYY')}</TableCell>
                             <TableCell>{dayjs(r.time).format('HH:mm')}</TableCell>
                             <TableCell>{r.guests}</TableCell>
-                            <TableCell>{users[r.userId]?.firstName + " " + users[r.userId]?.lastName || 'Загрузка...'}</TableCell>
-                            <TableCell>{users[r.userId]?.email || 'Загрузка...'}</TableCell>
+                            <TableCell>
+                                {r.userId && users[r.userId]
+                                    ? `${users[r.userId]?.firstName} ${users[r.userId]?.lastName}`
+                                    : r.guestName || 'Гость'}
+                            </TableCell>
+                            <TableCell>
+                                {r.userId && users[r.userId]
+                                    ? users[r.userId]?.email
+                                    : r.guestEmail || '-'}
+                            </TableCell>
                             <TableCell>{dayjs(r.createdAt).format('DD.MM.YYYY HH:mm')}</TableCell>
                             <TableCell>
                                 <Chip label={statusText(r.status)} color={statusColor(r.status)} />

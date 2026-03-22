@@ -3,6 +3,7 @@ import "./App.css";
 import { BrowserRouter } from "react-router-dom";
 import AppRouter from "./components/router/AppRouter";
 import Header from "./components/header/Header";
+import PublicHeader from "./components/header/PublicHeader";
 import { useSelector } from "react-redux";
 import { RootState } from "./store/store"; // путь к store
 
@@ -11,7 +12,7 @@ function App() {
 
     return (
         <BrowserRouter>
-            {isAuthenticated && <Header />}
+            {isAuthenticated ? <Header /> : <PublicHeader />}
             <AppRouter />
         </BrowserRouter>
     );

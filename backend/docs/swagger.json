@@ -1,0 +1,565 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Restaurant App API",
+    "version": "1.0.0",
+    "description": "API для приложения ресторана с поддержкой меню, бронирований, заказов и управления пользователями"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api/v1",
+      "description": "Local development server"
+    },
+    {
+      "url": "https://api.restaurant.com/api/v1",
+      "description": "Production server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Reservation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "userId": {
+            "type": "integer",
+            "nullable": true,
+            "description": "ID пользователя (null для гостей)"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "time": {
+            "type": "string",
+            "format": "time"
+          },
+          "guests": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "confirmed", "canceled", "rejected"]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "guestName": {
+            "type": "string",
+            "nullable": true,
+            "description": "Имя гостя (для незарегистрированных пользователей)"
+          },
+          "guestEmail": {
+            "type": "string",
+            "nullable": true,
+            "description": "Email гостя (для незарегистрированных пользователей)"
+          },
+          "guestPhone": {
+            "type": "string",
+            "nullable": true,
+            "description": "Телефон гостя (для незарегистрированных пользователей)"
+          }
+        }
+      },
+      "ReservationRequest": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "nullable": true,
+            "description": "ID пользователя (автоматически из токена)"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Дата в формате YYYY-MM-DD"
+          },
+          "time": {
+            "type": "string",
+            "description": "Время в формате HH:mm"
+          },
+          "guests": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "Имя гостя (для незарегистрированных)"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email гостя (для незарегистрированных)"
+          },
+          "phone": {
+            "type": "string",
+            "description": "Телефон гостя (для незарегистрированных)"
+          }
+        },
+        "required": ["date", "time", "guests"]
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Проверка здоровья сервера",
+        "responses": {
+          "200": {
+            "description": "Сервер работает"
+          }
+        }
+      }
+    },
+    "/auth/signup": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Регистрация нового пользователя",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {"type": "string", "format": "email"},
+                  "password": {"type": "string"},
+                  "firstName": {"type": "string"},
+                  "lastName": {"type": "string"},
+                  "phone": {"type": "string"}
+                },
+                "required": ["email", "password", "firstName", "lastName", "phone"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Успешная регистрация"},
+          "409": {"description": "Email уже существует"}
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Вход в систему",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {"type": "string", "format": "email"},
+                  "password": {"type": "string"}
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Успешный вход"},
+          "401": {"description": "Неверные учетные данные"}
+        }
+      }
+    },
+    "/auth/refreshToken": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Обновить токен доступа",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refreshToken": {"type": "string"}
+                },
+                "required": ["refreshToken"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Новый токен выдан"},
+          "401": {"description": "Неверный токен"}
+        }
+      }
+    },
+    "/auth/password": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Восстановление пароля",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {"type": "string", "format": "email"}
+                },
+                "required": ["email"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Письмо восстановления отправлено"},
+          "404": {"description": "Пользователь не найден"}
+        }
+      }
+    },
+    "/categories": {
+      "get": {
+        "tags": ["Categories"],
+        "summary": "Получить все категории меню",
+        "parameters": [
+          {
+            "name": "includeMenuItems",
+            "in": "query",
+            "required": true,
+            "schema": {"type": "boolean"},
+            "description": "Включить товары в каждую категорию"
+          }
+        ],
+        "responses": {
+          "200": {"description": "Список категорий (может быть пусто)"}
+        }
+      },
+      "post": {
+        "tags": ["Categories"],
+        "summary": "Создать категорию (только админ)",
+        "security": [{"BearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {"type": "string"},
+                  "description": {"type": "string"}
+                },
+                "required": ["name"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Категория создана"},
+          "403": {"description": "Доступ запрещен"}
+        }
+      }
+    },
+    "/menuItems": {
+      "get": {
+        "tags": ["Menu"],
+        "summary": "Получить товары меню по категории",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "in": "query",
+            "schema": {"type": "integer"},
+            "description": "ID категории (опционально)"
+          }
+        ],
+        "responses": {
+          "200": {"description": "Список товаров меню (может быть пусто)"}
+        }
+      },
+      "post": {
+        "tags": ["Menu"],
+        "summary": "Создать товар меню (только админ)",
+        "security": [{"BearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "metadata": {"type": "string", "description": "JSON данные товара"},
+                  "file": {"type": "string", "format": "binary"}
+                },
+                "required": ["metadata", "file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Товар создан"},
+          "403": {"description": "Доступ запрещен"}
+        }
+      }
+    },
+    "/reservations": {
+      "post": {
+        "tags": ["Reservations"],
+        "summary": "Создать бронирование столика",
+        "description": "Может использоваться без авторизации (для гостей) или с авторизацией",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReservationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Бронирование создано"},
+          "400": {"description": "Ошибка валидации"}
+        }
+      }
+    },
+    "/reservations/me": {
+      "get": {
+        "tags": ["Reservations"],
+        "summary": "Получить бронирования текущего пользователя",
+        "security": [{"BearerAuth": []}],
+        "responses": {
+          "200": {"description": "Список бронирований пользователя"},
+          "401": {"description": "Требуется авторизация"}
+        }
+      }
+    },
+    "/reservations/{id}/status": {
+      "patch": {
+        "tags": ["Reservations"],
+        "summary": "Обновить статус бронирования (только администратор)",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "integer"},
+            "description": "ID бронирования"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["confirmed", "canceled", "rejected"]
+                  },
+                  "comment": {"type": "string"}
+                },
+                "required": ["status"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Статус обновлен"},
+          "403": {"description": "Доступ запрещен"},
+          "404": {"description": "Не найдено"}
+        }
+      }
+    },
+    "/users/me": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Получить профиль текущего пользователя",
+        "security": [{"BearerAuth": []}],
+        "responses": {
+          "200": {"description": "Профиль пользователя"},
+          "401": {"description": "Требуется авторизация"}
+        }
+      },
+      "patch": {
+        "tags": ["Users"],
+        "summary": "Обновить профиль текущего пользователя",
+        "security": [{"BearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "firstName": {"type": "string"},
+                  "lastName": {"type": "string"},
+                  "email": {"type": "string", "format": "email"},
+                  "phone": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Профиль обновлен"},
+          "401": {"description": "Требуется авторизация"}
+        }
+      }
+    },
+    "/bonuses": {
+      "get": {
+        "tags": ["Bonuses"],
+        "summary": "Получить бонусы (требуется авторизация)",
+        "security": [{"BearerAuth": []}],
+        "responses": {
+          "200": {"description": "Информация о бонусах"},
+          "401": {"description": "Требуется авторизация"}
+        }
+      }
+    },
+    "/orders": {
+      "get": {
+        "tags": ["Orders"],
+        "summary": "Получить заказы пользователя (требуется авторизация)",
+        "security": [{"BearerAuth": []}],
+        "responses": {
+          "200": {"description": "Список заказов"},
+          "401": {"description": "Требуется авторизация"}
+        }
+      },
+      "post": {
+        "tags": ["Orders"],
+        "summary": "Создать заказ (требуется авторизация)",
+        "security": [{"BearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {"type": "integer"},
+                        "quantity": {"type": "integer"}
+                      }
+                    }
+                  },
+                  "address": {"type": "string"}
+                },
+                "required": ["items", "address"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Заказ создан"},
+          "401": {"description": "Требуется авторизация"}
+        }
+      }
+    },
+    "/events": {
+      "get": {
+        "tags": ["Events"],
+        "summary": "Получить события",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {"type": "string"},
+            "description": "Статус события"
+          }
+        ],
+        "responses": {
+          "200": {"description": "Список событий"}
+        }
+      },
+      "post": {
+        "tags": ["Events"],
+        "summary": "Создать событие (только админ)",
+        "security": [{"BearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {"type": "string"},
+                  "date": {"type": "string", "format": "date"},
+                  "startTime": {"type": "string"},
+                  "duration": {"type": "integer"},
+                  "guests": {"type": "integer"},
+                  "type": {"type": "string"}
+                },
+                "required": ["name", "date", "startTime", "duration", "guests"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Событие создано"},
+          "403": {"description": "Доступ запрещен"}
+        }
+      }
+    },
+    "/giftCertificates": {
+      "get": {
+        "tags": ["Gift Certificates"],
+        "summary": "Получить сертификаты (требуется авторизация)",
+        "security": [{"BearerAuth": []}],
+        "responses": {
+          "200": {"description": "Список сертификатов"},
+          "401": {"description": "Требуется авторизация"}
+        }
+      },
+      "post": {
+        "tags": ["Gift Certificates"],
+        "summary": "Создать сертификат (требуется авторизация)",
+        "security": [{"BearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "receiverEmail": {"type": "string", "format": "email"},
+                  "amount": {"type": "number"},
+                  "message": {"type": "string"}
+                },
+                "required": ["receiverEmail", "amount"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Сертификат создан"},
+          "401": {"description": "Требуется авторизация"}
+        }
+      }
+    }
+  },
+  "tags": [
+    {"name": "Health", "description": "Проверка здоровья сервера"},
+    {"name": "Auth", "description": "Аутентификация и авторизация"},
+    {"name": "Categories", "description": "Управление категориями меню"},
+    {"name": "Menu", "description": "Управление товарами меню"},
+    {"name": "Reservations", "description": "Управление бронированиями столиков (поддержка гостевых бронирований)"},
+    {"name": "Users", "description": "Управление профилями пользователей"},
+    {"name": "Orders", "description": "Управление заказами"},
+    {"name": "Events", "description": "Управление событиями"},
+    {"name": "Bonuses", "description": "Управление бонусами"},
+    {"name": "Gift Certificates", "description": "Управление подарочными сертификатами"}
+  ]
+}
+

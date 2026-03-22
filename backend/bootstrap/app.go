@@ -2,7 +2,6 @@ package bootstrap
 
 import (
 	"chipsiBackend/internal/mailer"
-	"github.com/minio/minio-go/v7"
 	"gorm.io/gorm"
 	"log/slog"
 	"os"
@@ -12,7 +11,6 @@ type Application struct {
 	Cfg  *Config
 	Db   *gorm.DB
 	Log  *slog.Logger
-	S3   *minio.Client
 	Mail *mailer.GomailMailer
 }
 
@@ -34,16 +32,10 @@ func App() Application {
 		log.Error("failed to connect to PostgreSQL", "error", err)
 		os.Exit(1)
 	} else {
-		sqlDB, _ := db.DB() // Получаем *sql.DB из GORM
+		sqlDB, _ := db.DB()
 		log.Info("Postgres connected", "status", sqlDB.Stats())
 	}
 
-	s3, err := NewS3Client(cfg)
-
-	if err != nil {
-		log.Error("failed to connect to S3", "error", err)
-		os.Exit(1)
-	}
 
 	gomailMailer := mailer.NewGomailMailer(
 		cfg.Smtp.From,
@@ -56,7 +48,6 @@ func App() Application {
 	app.Cfg = cfg
 	app.Log = log
 	app.Db = db
-	app.S3 = s3
 	app.Mail = gomailMailer
 
 	if err := Migrate(db); err != nil {

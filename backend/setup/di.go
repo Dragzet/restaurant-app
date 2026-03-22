@@ -62,8 +62,8 @@ func BuildGraph(app bootstrap.Application) Graph {
 	loginUsecase := usecase.NewLoginUsecase(userRepository, timeout, app.Cfg)
 	signupUsecase := usecase.NewSignupUsecase(userRepository, timeout)
 	refreshTokenUsecase := usecase.NewRefreshTokenUsecase(userRepository, app.Cfg, timeout)
-	s3Usecase := usecase.NewS3Usecase(app.S3, app.Cfg)
-	menuItemUsecase := usecase.NewMenuItemUsecase(s3Usecase, categoryUsecase, menuItemRepository, timeout)
+	menuItemUsecase := usecase.NewMenuItemUsecase(categoryUsecase, menuItemRepository, timeout)
+
 	orderUsecase := usecase.NewOrderUsecase(orderRepository, menuItemRepository, userRepository, giftCertificateRepository, bonusRepository)
 	reservationUsecase := usecase.NewReservationUsecase(reservationRepository, userRepository, app.Mail, timeout, app.Log)
 	eventUsecase := usecase.NewEventUsecase(eventRepository, userRepository, app.Mail, timeout, app.Log)
@@ -77,7 +77,6 @@ func BuildGraph(app bootstrap.Application) Graph {
 			Login:           loginUsecase,
 			MenuItem:        menuItemUsecase,
 			RefreshToken:    refreshTokenUsecase,
-			S3:              s3Usecase,
 			Signup:          signupUsecase,
 			User:            userUsecase,
 			Order:           orderUsecase,

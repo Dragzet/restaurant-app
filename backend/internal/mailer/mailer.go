@@ -2,6 +2,7 @@ package mailer
 
 import (
 	"fmt"
+
 	"gopkg.in/gomail.v2"
 )
 
@@ -253,7 +254,7 @@ func (m *GomailMailer) SendEventRejection(toEmail, firstName, date, time, commen
 func (m *GomailMailer) SendPasswordReset(toEmail, firstName, token string) error {
 	subject := "🔑 Восстановление пароля в Chipsi"
 
-	resetURL := fmt.Sprintf("https://chipsi.kolyshkin.online/reset-password?token=%s", token)
+	resetURL := fmt.Sprintf("http://localhost:3000/reset-password?token=%s", token)
 
 	body := fmt.Sprintf(`
 		<!DOCTYPE html>

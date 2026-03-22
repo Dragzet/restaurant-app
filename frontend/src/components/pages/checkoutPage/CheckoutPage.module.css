@@ -1,0 +1,139 @@
+/* Основной контейнер страницы */
+.page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Контейнер для корзины и информации о пользователе */
+.checkoutContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 2rem; /* Отступ между левым и правым блоком */
+}
+
+/* Левая часть (Корзина) */
+.cartSection {
+    flex: 0 0 60%; /* Левая часть займет 60% ширины */
+    padding-right: 2rem;
+}
+
+.itemList {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 2rem;
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
+}
+
+.image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.info {
+    flex: 1;
+    margin-left: 1rem;
+}
+
+.itemTotal {
+    font-weight: bold;
+    margin-top: 0.3rem;
+}
+
+.summary {
+    margin-top: 2rem;
+    font-size: 1.1rem;
+}
+
+.total {
+    font-weight: bold;
+    font-size: 1.3rem;
+    margin-top: 1rem;
+}
+
+.payBtn {
+    margin-top: 1.5rem;
+    padding: 0.8rem 1.5rem;
+    background-color: black;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+/* Правая часть (Информация о пользователе и выбор адреса) */
+.userInfoSection {
+    flex: 0 0 35%; /* Правая часть займет 35% ширины */
+    padding: 1.5rem;
+    border-left: 1px solid #ddd; /* Разделение между корзиной и правым блоком */
+}
+
+.userInfoSection h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.userInfo {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+
+.selectedAddress {
+    font-weight: bold;
+    margin-top: 1rem;
+    font-size: 1.1rem;
+}
+
+.selectAddressBtn, .changeAddressBtn {
+    background-color: black;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 15px;
+    border-radius: 5px;
+    width: 100%; /* Кнопка на всю ширину */
+}
+
+/* Кнопка оплаты */
+.payBtn {
+    background-color: black;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 15px;
+    width: 100%; /* Кнопка на всю ширину */
+}
+
+.selectAddressBtn:active, .payBtn:active, .changeAddressBtn:active {
+    background-color: black; /* Немного темнее при нажатии */
+}
+
+.selectAddressBtn:hover, .payBtn:hover, .changeAddressBtn:hover {
+    background-color: black;
+    opacity: 0.9;
+}
+
+.pay {
+    max-width: 600px;
+}
+
+.discount {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+}

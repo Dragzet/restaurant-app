@@ -1,0 +1,16 @@
+.container {
+    padding: 24px;
+}
+
+.categoryBlock {
+    margin-bottom: 40px;
+    scroll-margin-top: 80px; /* ← например, чуть больше, чем высота шапки */
+
+}
+
+.cardGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    justify-items: center;
+}

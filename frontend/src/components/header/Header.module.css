@@ -1,0 +1,142 @@
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: black;
+    padding: 10px 20px;
+    color: white;
+    font-family: sans-serif;
+}
+
+.left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.logo {
+    height: 50px;
+    width: 50px;
+}
+
+.logo:hover {
+    cursor: pointer;
+}
+
+.search {
+    background-color: white;
+    display: flex;
+    align-items: center;
+    padding: 4px 6px;
+    height: 36px;
+
+    border-radius: 8px;
+    color: #aaa;
+    width: 250px;
+}
+
+.searchIcon {
+    margin-right: 8px;
+}
+
+.search input {
+    border: none;
+    outline: none;
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.delivery {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    background-color: white;
+    color: black;
+    padding: 6px 12px;
+    border-radius: 8px;
+    gap: 8px;
+}
+
+.time {
+    background-color: black;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+
+.phone {
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+
+
+.link {
+    text-decoration: underline;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.icon {
+    transition: transform 0.3s ease;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+
+
+
+.basketInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding-left: 8px;
+    border-left: 1px solid white;
+}
+
+
+.deliveryWrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    flex-direction: column;
+}
+
+.popupWrapper {
+    position: absolute;
+    top:60px;
+}
+
+
+.profile, .basket {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+
+
+.profile:hover .icon, .basket:hover .icon{
+    transform: translateY(-3px);
+}
+
+.profile, .basket p {
+    font-size: 14px;
+    font-weight: bolder;
+}
+
+
+p {
+    margin-block-start: 0;
+    margin-block-end: 0;
+}

@@ -1,0 +1,52 @@
+.wrapper {
+    margin-top: 1.5rem;
+}
+
+.title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    background: linear-gradient(to right, #ff3c6f, #7b63ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.75rem;
+}
+
+.options {
+    display: flex;
+    gap: 1rem;
+    background: #f6f6f6;
+    padding: 0.5rem;
+    border-radius: 1rem;
+}
+
+.option {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 1rem;
+    font-size: 1rem;
+    cursor: pointer;
+    color: #333;
+    transition: background 0.2s ease;
+}
+
+.option:hover:not(:disabled) {
+    background: #e0e0e0;
+}
+
+.active {
+    background: white;
+    box-shadow: 0 0 0 2px #ccc;
+    font-weight: 600;
+}
+
+.plus {
+    font-weight: bold;
+    margin-left: 0.25rem;
+}
+
+.option:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

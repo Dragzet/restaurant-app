@@ -1,0 +1,31 @@
+app:
+  jwt_secret_key: test-secret
+  access_token_expiry: 2h
+  refresh_token_expiry: 168h
+
+server:
+  host: localhost
+  port: 8080
+
+database:
+  user: postgres
+  password: 123
+  host: localhost
+  port: 5432
+  dbname: chipsi
+  sslMode: false
+
+s3:
+  endpoint: s3.cloud.ru
+  bucket: chipsi-restaurant
+  region: ru-central-1
+  access_key:
+  secret_key:
+
+
+smtp:
+  from: roflandown@yandex.ru
+  host: smtp.yandex.ru
+  port: 465
+  username: roflandown@yandex.ru
+  password:

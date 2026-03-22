@@ -1,0 +1,91 @@
+.card {
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid #eaeaea;
+    padding: 16px 0;
+    position: relative;
+}
+
+.image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 50%;
+    position: absolute;
+    top: 16px;
+    left: 0;
+}
+
+.info {
+    margin-left: 80px;
+    margin-bottom: 8px;
+}
+
+.title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #000;
+}
+
+.subtitle {
+    font-size: 14px;
+    color: #6c6c6c;
+}
+
+.remove {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #888;
+    cursor: pointer;
+}
+
+.bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-left: 80px;
+    margin-top: 8px;
+    gap: 12px;
+}
+
+.price {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f3f5;
+    border-radius: 20px;
+    padding: 4px 8px;
+    gap: 8px;
+    height: 32px;
+}
+
+.controls button {
+    background: none;
+    border: none;
+    font-size: 18px;
+    width: 28px;
+    height: 28px;
+    line-height: 1;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.controls span {
+    min-width: 20px;
+    text-align: center;
+    font-size: 16px;
+}

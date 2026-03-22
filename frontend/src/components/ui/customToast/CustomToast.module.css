@@ -1,0 +1,21 @@
+.custom-toast {
+    background: black;
+    border-radius: 12px;
+    padding: 14px 20px;
+    color: white;
+    font-family: sans-serif;
+    max-width: 320px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.custom-toast-title {
+    font-weight: 400;
+    font-size: 13px;
+    color: #cccccc;
+    margin-bottom: 4px;
+}
+
+.custom-toast-desc {
+    font-weight: 600;
+    font-size: 16px;
+}

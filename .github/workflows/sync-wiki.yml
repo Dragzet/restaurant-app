@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'wiki/**'
+      - '.github/workflows/sync-wiki.yml'
 
   workflow_dispatch:
 
@@ -26,14 +27,18 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           WIKI_URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.wiki.git"
-          if git clone "$WIKI_URL" wiki-repo; then
-            echo "Wiki repository cloned successfully"
+          if ! git clone "$WIKI_URL" wiki-repo 2>/dev/null; then
+            echo "Wiki repository not found. Initializing via GitHub API..."
+            gh api \
+              --method POST \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/${{ github.repository }}/wiki/pages" \
+              -f title="Home" \
+              -f content="# Initializing..."
+            sleep 3  # give GitHub time to provision the new wiki repository
+            git clone "$WIKI_URL" wiki-repo || { echo "Failed to clone wiki after initialization"; exit 1; }
           else
-            echo "Wiki repository not found, initializing a new one"
-            mkdir -p wiki-repo
-            cd wiki-repo
-            git init -b master
-            git remote add origin "$WIKI_URL"
+            echo "Wiki repository cloned successfully"
           fi
 
       - name: Copy wiki pages
